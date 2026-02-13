@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, Clock, Phone, Mail, Navigation as NavigationIcon } from "lucide-react";
 import WhatsAppFloating from "@/components/WhatsAppFloating";
+import { useNavigate } from "react-router-dom";
 
 const locations = [
   {
@@ -41,6 +42,7 @@ const locations = [
 ];
 
 const Locations = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -145,7 +147,7 @@ const Locations = () => {
 
                   {/* Actions */}
                   <div className="grid grid-cols-2 gap-2 pt-2">
-                    <Button variant="hero" size="sm">
+                    <Button variant="hero" size="sm" onClick={() => navigate("/book-repair")}>
                       Book Now
                     </Button>
                     <Button variant="outline" size="sm" className="gap-2">

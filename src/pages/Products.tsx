@@ -13,8 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ShoppingCart, Search } from "lucide-react";
-import { useCart } from "@/hooks/useCart";
+import { Search, Phone } from "lucide-react";
 import lcd from "@/assets/lcd.png";
 import touch from "@/assets/touch.png";
 import oled from "@/assets/oled.png";
@@ -205,8 +204,13 @@ const products = [
 ];
 
 const Products = () => {
-  const { addToCart } = useCart();
   const navigate = useNavigate();
+  
+  const openWhatsApp = (productName: string) => {
+    const phone = "+254707907223".replace(/[^+\d]/g, "");
+    const text = encodeURIComponent(`Hi Nzuri Mobiles, I'm interested in ${productName}. Please share availability and price.`);
+    window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
+  };
   
   return (
     <div className="min-h-screen bg-background">
@@ -322,15 +326,10 @@ const Products = () => {
                   <Button 
                     className="w-full gap-2" 
                     variant="hero"
-                    onClick={() => addToCart({
-                      name: product.name,
-                      category: product.category,
-                      price: product.price,
-                      image: product.image,
-                    })}
+                    onClick={() => openWhatsApp(product.name)}
                   >
-                    <ShoppingCart className="w-4 h-4" />
-                    Add to Cart
+                    <Phone className="w-4 h-4" />
+                    Enquire on WhatsApp
                   </Button>
                 </CardContent>
               </Card>

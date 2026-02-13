@@ -1,14 +1,10 @@
 import { useState } from "react";
-import { Menu, X, Smartphone, LogOut, User, Shield, ShoppingCart, Bell, ChevronDown, LayoutDashboard, Wrench, Package } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { useCart } from "@/hooks/useCart";
-import { useNotifications } from "@/hooks/useNotifications";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,9 +17,6 @@ const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAdmin } = useAuth();
-  const { totalItems } = useCart();
-  const { unreadCount } = useNotifications();
 
   const mainNavItems = [
     { to: "/home", label: "Home" },
@@ -38,26 +31,9 @@ const Navigation = () => {
     { to: "/locations", label: "Locations" },
   ];
 
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to log out. Please try again.",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Logged out",
-        description: "You've been successfully logged out.",
-      });
-      navigate("/auth");
-    }
-  };
-
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-6 md:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <NavLink to="/home" className="flex items-center gap-3 font-bold text-primary">
@@ -105,72 +81,6 @@ const Navigation = () => {
             <Button variant="hero" size="sm" onClick={() => navigate("/book-repair")}>
               Book Repair
             </Button>
-            
-            {/* Cart */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative"
-              onClick={() => navigate("/cart")}
-            >
-              <ShoppingCart className="w-5 h-5" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {totalItems}
-                </span>
-              )}
-            </Button>
-
-            {/* Profile Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <User className="w-5 h-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                      {unreadCount}
-                    </span>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-popover border border-border">
-                <DropdownMenuItem onClick={() => navigate("/dashboard")} className="gap-2">
-                  <LayoutDashboard className="w-4 h-4" />
-                  Dashboard
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/track")} className="gap-2">
-                  <Wrench className="w-4 h-4" />
-                  My Repairs
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/products")} className="gap-2">
-                  <Package className="w-4 h-4" />
-                  Orders
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/notifications")} className="gap-2">
-                  <Bell className="w-4 h-4" />
-                  Notifications
-                  {unreadCount > 0 && (
-                    <span className="ml-auto bg-destructive text-destructive-foreground text-xs rounded-full px-2">
-                      {unreadCount}
-                    </span>
-                  )}
-                </DropdownMenuItem>
-                {isAdmin && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate("/admin")} className="gap-2">
-                      <Shield className="w-4 h-4" />
-                      Admin Panel
-                    </DropdownMenuItem>
-                  </>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="gap-2 text-destructive">
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
 
           {/* Mobile Actions */}
@@ -218,67 +128,6 @@ const Navigation = () => {
                 {item.label}
               </NavLink>
             ))}
-            
-            <div className="border-t border-border my-2" />
-            
-            <button
-              onClick={() => { navigate("/dashboard"); setIsOpen(false); }}
-              className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-muted text-foreground"
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Dashboard
-            </button>
-            <button
-              onClick={() => { navigate("/track"); setIsOpen(false); }}
-              className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-muted text-foreground"
-            >
-              <Wrench className="w-4 h-4" />
-              My Repairs
-            </button>
-            <button
-              onClick={() => { navigate("/cart"); setIsOpen(false); }}
-              className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-muted text-foreground relative"
-            >
-              <ShoppingCart className="w-4 h-4" />
-              Cart
-              {totalItems > 0 && (
-                <span className="ml-auto bg-primary text-primary-foreground text-xs rounded-full px-2">
-                  {totalItems}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => { navigate("/notifications"); setIsOpen(false); }}
-              className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-muted text-foreground"
-            >
-              <Bell className="w-4 h-4" />
-              Notifications
-              {unreadCount > 0 && (
-                <span className="ml-auto bg-destructive text-destructive-foreground text-xs rounded-full px-2">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-            
-            {isAdmin && (
-              <button
-                onClick={() => { navigate("/admin"); setIsOpen(false); }}
-                className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-muted text-foreground"
-              >
-                <Shield className="w-4 h-4" />
-                Admin Panel
-              </button>
-            )}
-            
-            <div className="border-t border-border my-2" />
-            
-            <button
-              onClick={() => { handleLogout(); setIsOpen(false); }}
-              className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-muted text-destructive"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </button>
           </div>
         </div>
       </div>
