@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -40,9 +40,9 @@ const formSchema = z.object({
   device_model: z.string().trim().min(2, { message: "Device model must be at least 2 characters" }).max(100, { message: "Device model must be less than 100 characters" }),
   issue_description: z.string().trim().min(10, { message: "Please provide at least 10 characters describing the issue" }).max(1000, { message: "Description must be less than 1000 characters" }),
   booking_date: z.date({ required_error: "Please select a booking date" }),
-  customer_name: z.string().trim().min(2, { message: "Name must be at least 2 characters" }).max(100, { message: "Name must be less than 100 characters" }),
-  customer_phone: z.string().trim().min(7, { message: "Please enter a valid phone number" }).max(20, { message: "Phone number too long" }),
-  customer_email: z.string().trim().email({ message: "Please enter a valid email address" }).optional().or(z.literal("")),
+  customer_name: z.string().trim().min(2, { message: "Please enter your name" }).max(80, { message: "Name must be less than 80 characters" }),
+  customer_phone: z.string().trim().min(7, { message: "Please enter a valid phone" }).max(20, { message: "Phone too long" }),
+  customer_email: z.string().trim().email({ message: "Invalid email address" }).optional().or(z.literal("")),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -59,9 +59,8 @@ const serviceTypes = [
 export function BookingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
 
-  const preselectedServiceTitle = (location.state as { service?: string } | null)?.service ?? "";
+  const preselectedServiceTitle = (location.state as any)?.service ?? "";
 
   const mapTitleToValue = (title: string) => {
     const t = title.toLowerCase().trim();
@@ -75,6 +74,15 @@ export function BookingForm() {
   };
 
   const initialService = useMemo(() => mapTitleToValue(preselectedServiceTitle), [preselectedServiceTitle]);
+
+  const normalizePhone = (raw: string) => {
+    const s = raw.replace(/\D/g, "");
+    if (s.startsWith("0") && s.length >= 10) return `254${s.slice(1)}`;
+    if (s.startsWith("254")) return s;
+    if (s.startsWith("2540")) return s.replace(/^2540/, "254");
+    if (s.startsWith("7")) return `254${s}`;
+    return s;
+  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -93,84 +101,59 @@ export function BookingForm() {
     setIsSubmitting(true);
 
     try {
-      const normalize = (p: string) => {
-        const digits = p.replace(/\D+/g, "");
-        if (digits.startsWith("254")) return digits;
-        if (digits.startsWith("0") && digits.length === 10) return "254" + digits.slice(1);
-        return digits;
-      };
-      const phoneNormalized = normalize(values.customer_phone);
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        toast({
+          variant: "destructive",
+          title: "Authentication required",
+          description: "Please log in to book a repair service.",
+        });
+        return;
+      }
 
-      const { data, error: insertError } = await supabase
+      // Insert booking
+      const { data: inserted, error: insertError } = await supabase
         .from("repair_bookings")
         .insert({
+          user_id: user.id,
           service_type: values.service_type,
           device_model: values.device_model,
           issue_description: values.issue_description,
           booking_date: values.booking_date.toISOString(),
           status: "pending",
           customer_name: values.customer_name,
-          customer_phone: phoneNormalized,
+          customer_phone: normalizePhone(values.customer_phone),
           customer_email: values.customer_email || null,
         })
-        .select("tracking_id")
-        .single();
+        .select()
+        .limit(1);
 
       if (insertError) {
         throw insertError;
       }
 
-      try {
+      const booking = inserted?.[0];
+      if (booking) {
         await supabase.functions.invoke("booking-email", {
           body: {
-            tracking_id: data?.tracking_id,
+            tracking_id: booking.tracking_id,
             customer_name: values.customer_name,
-            customer_phone: phoneNormalized,
-            customer_email: values.customer_email || null,
+            customer_phone: normalizePhone(values.customer_phone),
+            customer_email: values.customer_email || "",
             service_type: values.service_type,
             device_model: values.device_model,
             issue_description: values.issue_description,
             booking_date: values.booking_date.toISOString(),
           },
         });
-      } catch (err) {
-        console.error("Edge email error:", err);
-      }
-
-      const webhookUrl = import.meta.env.VITE_BOOKINGS_WEBHOOK_URL;
-      if (webhookUrl) {
-        try {
-          await fetch(webhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              tracking_id: data?.tracking_id,
-              customer_name: values.customer_name,
-              customer_phone: phoneNormalized,
-              customer_email: values.customer_email || null,
-              service_type: values.service_type,
-              device_model: values.device_model,
-              issue_description: values.issue_description,
-              booking_date: values.booking_date.toISOString(),
-            }),
-          });
-        } catch (err) {
-          console.error("Webhook error:", err);
-        }
       }
 
       toast({
         title: "Booking submitted successfully!",
-        description: `Your Tracking ID: ${data?.tracking_id}. Use it to track your repair.`,
+        description: "We'll contact you soon to confirm your repair appointment.",
       });
-
-      if (data?.tracking_id) {
-        try {
-          localStorage.setItem("last_tracking_id", data.tracking_id);
-          localStorage.setItem("last_tracking_phone", phoneNormalized);
-        } catch {}
-        navigate(`/track?id=${data.tracking_id}&phone=${phoneNormalized}`);
-      }
 
       form.reset();
     } catch (error) {
@@ -228,48 +211,6 @@ export function BookingForm() {
               <FormDescription>
                 Enter your device brand and model
               </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="customer_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Your Name</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., Jane Doe" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="customer_phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone Number</FormLabel>
-              <FormControl>
-                <Input placeholder="+254 700 000 000" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="customer_email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email (optional)</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="jane@example.com" {...field} />
-              </FormControl>
               <FormMessage />
             </FormItem>
           )}

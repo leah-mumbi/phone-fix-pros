@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,13 +48,18 @@ const TrackOrder = () => {
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [customerPhone, setCustomerPhone] = useState("");
 
-  const handleSearch = useCallback(async () => {
-    if (!trackingId.trim() || !customerPhone.trim()) {
+  useEffect(() => {
+    if (searchParams.get("id")) {
+      handleSearch();
+    }
+  }, []);
+
+  const handleSearch = async () => {
+    if (!trackingId.trim()) {
       toast({
         title: "Error",
-        description: "Please enter a tracking ID and phone number.",
+        description: "Please enter a tracking ID.",
         variant: "destructive",
       });
       return;
@@ -64,48 +69,21 @@ const TrackOrder = () => {
     setSearched(true);
 
     try {
-      const normalize = (p: string) => {
-        const digits = p.replace(/\D+/g, "");
-        if (digits.startsWith("254")) return digits;
-        if (digits.startsWith("0") && digits.length === 10) return "254" + digits.slice(1);
-        return digits;
-      };
-      const phoneNormalized = normalize(customerPhone.trim());
-      const localVariant = phoneNormalized.startsWith("254")
-        ? "0" + phoneNormalized.slice(3)
-        : phoneNormalized;
+      const { data, error } = await supabase
+        .from("repair_bookings")
+        .select("*")
+        .eq("tracking_id", trackingId.trim().toUpperCase())
+        .maybeSingle();
 
-      const { data, error } = await supabase.rpc("get_booking_by_public_key", {
-        _tracking_id: trackingId.trim().toUpperCase(),
-        _phone: phoneNormalized,
-      });
       if (error) throw error;
 
-      let found = Array.isArray(data) && data.length > 0 ? data[0] : null;
-
-      if (!found) {
-        const { data: byId } = await supabase
-          .from("repair_bookings")
-          .select("*")
-          .eq("tracking_id", trackingId.trim().toUpperCase())
-          .limit(1)
-          .maybeSingle();
-        if (byId) {
-          found = byId as any;
-          toast({
-            title: "Found by ID",
-            description: "Phone number format didn’t match. Showing result by Tracking ID.",
-          });
-        }
-      }
-
-      if (found) {
-        setBooking(found);
+      if (data) {
+        setBooking(data);
       } else {
         setBooking(null);
         toast({
           title: "Not Found",
-          description: "No repair found matching that Tracking ID and Phone.",
+          description: "No repair found with that tracking ID.",
           variant: "destructive",
         });
       }
@@ -119,21 +97,7 @@ const TrackOrder = () => {
     } finally {
       setLoading(false);
     }
-  }, [trackingId, customerPhone, toast]);
-
-  useEffect(() => {
-    const id = searchParams.get("id");
-    const phone = searchParams.get("phone");
-    if (id) setTrackingId(id.toUpperCase());
-    if (phone) setCustomerPhone(phone);
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (trackingId && customerPhone) {
-      handleSearch();
-    }
-  }, [trackingId, customerPhone, handleSearch]);
-
+  };
 
   const getCurrentStepIndex = () => {
     if (!booking) return -1;
@@ -176,7 +140,7 @@ const TrackOrder = () => {
           {/* Search Form */}
           <Card className="mb-8">
             <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="flex gap-3">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -187,17 +151,7 @@ const TrackOrder = () => {
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   />
                 </div>
-                <div className="relative flex-1">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Enter phone used in booking"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="pl-10"
-                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  />
-                </div>
-                <Button onClick={handleSearch} disabled={loading} className="md:col-span-1">
+                <Button onClick={handleSearch} disabled={loading}>
                   {loading ? "Searching..." : "Track"}
                 </Button>
               </div>
@@ -228,30 +182,18 @@ const TrackOrder = () => {
                       <Package className="w-5 h-5" />
                       {booking.tracking_id}
                     </CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={
-                          booking.status === "completed"
-                            ? "outline"
-                            : booking.status === "cancelled"
-                            ? "destructive"
-                            : "default"
-                        }
-                        className={`${getStatusColor(booking.status)} text-sm`}
-                      >
-                        {booking.status.replace("_", " ").toUpperCase()}
-                      </Badge>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          navigator.clipboard.writeText(booking.tracking_id || "");
-                          toast({ title: "Copied", description: "Tracking ID copied to clipboard" });
-                        }}
-                      >
-                        Copy ID
-                      </Button>
-                    </div>
+                    <Badge
+                      variant={
+                        booking.status === "completed"
+                          ? "outline"
+                          : booking.status === "cancelled"
+                          ? "destructive"
+                          : "default"
+                      }
+                      className={`${getStatusColor(booking.status)} text-sm`}
+                    >
+                      {booking.status.replace("_", " ").toUpperCase()}
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -394,18 +336,7 @@ const TrackOrder = () => {
                         Contact our support team for assistance
                       </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        const phone = "254707907223";
-                        const msg = encodeURIComponent(
-                          `Hello Nzuri Mobiles, my Tracking ID is "${booking?.tracking_id || trackingId}". Please assist.`
-                        );
-                        window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
-                      }}
-                    >
-                      Contact Support
-                    </Button>
+                    <Button variant="outline">Contact Support</Button>
                   </div>
                 </CardContent>
               </Card>

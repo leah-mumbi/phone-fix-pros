@@ -90,7 +90,7 @@ export type Database = {
           technician_notes: string | null
           tracking_id: string | null
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           booking_date: string
@@ -107,7 +107,7 @@ export type Database = {
           technician_notes?: string | null
           tracking_id?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           booking_date?: string
@@ -124,7 +124,7 @@ export type Database = {
           technician_notes?: string | null
           tracking_id?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }

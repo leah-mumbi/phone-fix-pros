@@ -5,45 +5,31 @@ Deno.serve(async (req) => {
   try {
     const payload = await req.json();
     const apiKey = Deno.env.get("RESEND_API_KEY");
-    const businessEmail = Deno.env.get("BOOKINGS_TO_EMAIL") || "";
     if (!apiKey) {
       return new Response(JSON.stringify({ error: "Missing RESEND_API_KEY" }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
       });
     }
-
     const {
       tracking_id = "",
-      customer_name = "",
-      customer_phone = "",
       customer_email = "",
-      service_type = "",
+      status = "",
       device_model = "",
-      issue_description = "",
-      booking_date = "",
+      technician_notes = "",
     } = payload || {};
-
-    const recipients = [businessEmail].filter(Boolean);
-    if (customer_email) recipients.push(customer_email);
-    if (recipients.length === 0) {
-      return new Response(JSON.stringify({ error: "No recipients" }), {
-        status: 400,
+    if (!customer_email) {
+      return new Response(JSON.stringify({ ok: true, skipped: "no customer email" }), {
+        status: 200,
         headers: { "Content-Type": "application/json" },
       });
     }
-
     const lines = [
-      `Tracking ID: ${tracking_id || "-"}`,
-      `Name: ${customer_name || "-"}`,
-      `Phone: ${customer_phone || "-"}`,
-      `Email: ${customer_email || "-"}`,
-      `Service: ${service_type || "-"}`,
-      `Device: ${device_model || "-"}`,
-      `Issue: ${issue_description || "-"}`,
-      `Preferred Date: ${booking_date || "-"}`,
-    ];
-
+      `Tracking ID: ${tracking_id}`,
+      `Device: ${device_model}`,
+      `Status: ${status}`,
+      technician_notes ? `Notes: ${technician_notes}` : "",
+    ].filter(Boolean);
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -51,13 +37,12 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Nzuri Mobiles <bookings@phone-fix-pros.local>",
-        to: recipients,
-        subject: `New Repair Booking: ${tracking_id || device_model || "Repair"}`,
+        from: "Nzuri Mobiles <notifications@phone-fix-pros.local>",
+        to: [customer_email],
+        subject: `Repair Status Update: ${tracking_id}`,
         text: lines.join("\n"),
       }),
     });
-
     if (!res.ok) {
       const errText = await res.text();
       return new Response(JSON.stringify({ error: "Email send failed", details: errText }), {
@@ -65,7 +50,6 @@ Deno.serve(async (req) => {
         headers: { "Content-Type": "application/json" },
       });
     }
-
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" },

@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import sparePartsImage from "@/assets/spare-parts.png";
-import { Phone } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
+import { useCart } from "@/hooks/useCart";
 import screens from "@/assets/screens.png";
 import battery from "@/assets/battery.jpg";
 import screenProtectors from "@/assets/screen-protectors.png";
@@ -104,11 +105,7 @@ const products = [
 
 const ProductsSection = () => {
   const navigate = useNavigate();
-  const openWhatsApp = (productName: string) => {
-    const phone = "+254707907223".replace(/[^+\d]/g, "");
-    const text = encodeURIComponent(`Hi Nzuri Mobiles, I'm interested in ${productName}. Please share availability and price.`);
-    window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
-  };
+  const { addToCart } = useCart();
 
   return (
     <section className="py-20">
@@ -181,10 +178,15 @@ const ProductsSection = () => {
                   <Button 
                     size="sm" 
                     className="gap-2"
-                    onClick={() => openWhatsApp(product.name)}
+                    onClick={() => addToCart({
+                      name: product.name,
+                      category: product.category,
+                      price: product.price,
+                      image: product.image,
+                    })}
                   >
-                    <Phone className="w-4 h-4" />
-                    Enquire
+                    <ShoppingCart className="w-4 h-4" />
+                    Add
                   </Button>
                 </div>
               </CardContent>
