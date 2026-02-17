@@ -8,7 +8,7 @@ import { useCart } from "@/hooks/useCart";
 import screens from "@/assets/screens.png";
 import battery from "@/assets/battery.jpg";
 import screenProtectors from "@/assets/screen-protectors.png";
-import UV from "@/assets/uv.jpg";
+import uv from "@/assets/uv.jpg";
 import phoneCase from "@/assets/phone-case.png";
 import iphoneCase from "@/assets/iphone-case.png";
 import accesories from "@/assets/accesories.png";
@@ -42,7 +42,7 @@ const products = [
     category: "UV Protector",
     price: "From Ksh 800",
     stock: "In Stock",
-    image: UV,
+    image: uv,
   },
   {
     name: "Phone Cases",
