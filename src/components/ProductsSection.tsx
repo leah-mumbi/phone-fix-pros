@@ -8,12 +8,11 @@ import { useCart } from "@/hooks/useCart";
 import screens from "@/assets/screens.png";
 import battery from "@/assets/battery.jpg";
 import screenProtectors from "@/assets/screen-protectors.png";
-import uv from "../assets/uv.jpg"
+import uv from "@/assets/uv-tempered.jpg";
 import phoneCase from "@/assets/phone-case.png";
 import iphoneCase from "@/assets/iphone-case.png";
 import accesories from "@/assets/accesories.png";
 import earPods from "@/assets/ear-pods.png";
-import { access } from "fs";
 
 const products = [
   {
@@ -38,8 +37,8 @@ const products = [
     image: screenProtectors,
   },
   {
-    name: "UV Tempered Glass",
-    category: "UV Protector",
+    name: "uv Tempered Glass",
+    category: "uv Protector",
     price: "From Ksh 800",
     stock: "In Stock",
     image: uv,
