@@ -6,8 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/hooks/useCart";
 import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
-import Splash from "./pages/Splash";
-import Auth from "./pages/Auth";
+/*import Splash from "./pages/Splash";*/
+/*import Auth from "./pages/Auth";*/
 import Home from "./pages/Home";
 import Services from "./pages/Services";
 import Products from "./pages/Products";
@@ -53,7 +53,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/cart" element={<Cart />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            
           </Routes>
           <Footer />
         </BrowserRouter>
