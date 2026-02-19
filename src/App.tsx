@@ -22,6 +22,8 @@ import Contact from "./pages/Contact";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 import Footer from "@/components/Footer";
+import { Navigate } from "react-router-dom";
+
 
 const queryClient = new QueryClient();
 
@@ -40,6 +42,7 @@ const App = () => (
   {/* Disabled pages (kept for later) */}
   {/* <Route path="/splash" element={<Splash />} /> */}
   {/* <Route path="/auth" element={<Auth />} /> */}
+<Route path="/auth" element={<Navigate to="/" />} />
 
             <Route path="/services" element={<Services />} />
             <Route path="/products" element={<Products />} />
