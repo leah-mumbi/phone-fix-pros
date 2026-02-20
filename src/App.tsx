@@ -7,13 +7,11 @@ import { CartProvider } from "@/hooks/useCart";
 import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 /*import Splash from "./pages/Splash";*/
-/*import Auth from "./pages/Auth";*/
 import Home from "./pages/Home";
 import Services from "./pages/Services";
 import Products from "./pages/Products";
 import Locations from "./pages/Locations";
 import BookRepair from "./pages/BookRepair";
-import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Notifications from "./pages/Notifications";
 import TrackOrder from "./pages/TrackOrder";
@@ -22,7 +20,6 @@ import Contact from "./pages/Contact";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 import Footer from "@/components/Footer";
-import { Navigate } from "react-router-dom";
 
 
 const queryClient = new QueryClient();
@@ -41,14 +38,11 @@ const App = () => (
 
   {/* Disabled pages (kept for later) */}
   {/* <Route path="/splash" element={<Splash />} /> */}
-  {/* <Route path="/auth" element={<Auth />} /> */}
-<Route path="/auth" element={<Navigate to="/" />} />
 
             <Route path="/services" element={<Services />} />
             <Route path="/products" element={<Products />} />
             <Route path="/locations" element={<Locations />} />
             <Route path="/book-repair" element={<BookRepair />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/track" element={<TrackOrder />} />

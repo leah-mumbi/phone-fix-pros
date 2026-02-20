@@ -4,7 +4,7 @@ const Footer = () => {
   const navigate = useNavigate();
 
   const quickLinks = [
-    { label: "Home", path: "/home" },
+    { label: "Home", path: "/" },
     { label: "Services", path: "/services" },
     { label: "Products", path: "/products" },
     { label: "About Us", path: "/about" },

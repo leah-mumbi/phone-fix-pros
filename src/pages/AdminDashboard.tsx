@@ -77,9 +77,9 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
-        navigate("/auth");
+        navigate("/");
       } else if (!isAdmin) {
-        navigate("/dashboard");
+        navigate("/");
         toast({
           title: "Access Denied",
           description: "You don't have admin privileges.",

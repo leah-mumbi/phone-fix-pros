@@ -26,7 +26,7 @@ const Navigation = () => {
   const { unreadCount } = useNotifications();
 
   const mainNavItems = [
-    { to: "/home", label: "Home" },
+    { to: "/", label: "Home" },
     { to: "/services", label: "Services" },
     { to: "/products", label: "Products" },
     { to: "/track", label: "Track Repair" },
@@ -51,7 +51,7 @@ const Navigation = () => {
         title: "Logged out",
         description: "You've been successfully logged out.",
       });
-      navigate("/auth");
+      navigate("/");
     }
   };
 
@@ -60,7 +60,7 @@ const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <NavLink to="/home" className="flex items-center gap-3 font-bold text-primary">
+          <NavLink to="/" className="flex items-center gap-3 font-bold text-primary">
             <div className="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full bg-white">
               <img src="/logo.png" alt="Nzuri Mobiles" className="w-full h-full object-contain p-1.5" />
             </div>
